@@ -31,9 +31,9 @@ int main(int argc, char** argv) {
     candidates[0] = false;
     candidates[1] = false; // 1 not considered prime
 
-    for (size_t i = 2; i <= rangeEnd; ++i) {
+    for (size_t i = 2; i < size; ++i) {
         if (candidates[i]) {
-            for (size_t j = i + i; j < rangeEnd; j += i) {
+            for (size_t j = i + i; j < size; j += i) {
                 candidates[j] = false;
             }
         }
