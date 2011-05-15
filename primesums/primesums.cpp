@@ -26,20 +26,19 @@ int main(int argc, char** argv) {
     istringstream(argv[3]) >> maxPower;    
     const char* const outFileName = argv[4];
 
-    unsigned int size = rangeEnd - rangeStart + 2;
-    vector<bool> candidates(size, true);
+    vector<bool> candidates(rangeEnd + 1, true);
     candidates[0] = false;
     candidates[1] = false; // 1 not considered prime
 
-    for (size_t i = 2; i < size; ++i) {
+    for (size_t i = 2; i <= rangeEnd; ++i) {
         if (candidates[i]) {
-            for (size_t j = i + i; j < size; j += i) {
+            for (size_t j = i + i; j <= rangeEnd; j += i) {
                 candidates[j] = false;
             }
         }
     }
 
-    for (size_t i = 1; i < candidates.size(); ++i)
+    for (size_t i = rangeStart; i <= rangeEnd; ++i)
         if (candidates[i])
             cout << i << endl;
 
