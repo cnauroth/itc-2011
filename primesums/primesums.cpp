@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
     istringstream(argv[1]) >> rangeStart;
     istringstream(argv[2]) >> rangeEnd;
     istringstream(argv[3]) >> maxPower;    
-    const char* const outFileName = argv[4];
+    ofstream out(argv[4]);
 
     vector<bool> candidates(rangeEnd + 1, true);
     candidates[0] = false;
@@ -35,12 +35,29 @@ int main(int argc, char** argv) {
             for (size_t j = i + i; j <= rangeEnd; j += i) {
                 candidates[j] = false;
             }
+
+            for (size_t sum = i, j = i - 1; j >= rangeStart; --j) {
+                if (candidates[j]) {
+                    sum += j;
+
+                    for (size_t base = 2, product = base * base;
+                         product <= sum;
+                         ++base, product = base * base) {
+
+                        for (size_t power = 2;
+                             power <= maxPower && product <= sum;
+                             ++power, product *= base) {
+
+                            if (product == sum) {
+                                out << "sum(" << j << ":" << i << ") = " << sum
+                                     << " = " << base << "**" << power << endl;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-
-    for (size_t i = rangeStart; i <= rangeEnd; ++i)
-        if (candidates[i])
-            cout << i << endl;
 
     cout << (tbb::tick_count::now() - begin).seconds() << endl;
     return 0;
