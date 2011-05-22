@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
     for (size_t i = 2; i <= rangeEnd; ++i) {
         if (candidates[i]) {
-            for (size_t j = i + i; j <= rangeEnd; j += i) {
+            for (size_t j = i * i; j <= rangeEnd; j += i) {
                 candidates[j] = false;
             }
 
