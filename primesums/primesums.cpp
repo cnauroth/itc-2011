@@ -14,16 +14,17 @@
 using namespace std;
 using namespace tbb;
 
+static concurrent_vector<size_t> primes;
+
 class PrimeFunctor {
 public:
-    PrimeFunctor(concurrent_vector<size_t>& primes,
-                 const size_t rangeStart, const size_t rangeEnd):
-        _candidates(vector<bool>(rangeEnd + 1, true)), _primes(primes), _rangeStart(rangeStart), _rangeEnd(rangeEnd) {
+    PrimeFunctor(const size_t rangeStart, const size_t rangeEnd):
+        _candidates(vector<bool>(rangeEnd + 1, true)), _rangeStart(rangeStart), _rangeEnd(rangeEnd) {
 
         this->_candidates[0] = false;
         this->_candidates[1] = false;
         this->_candidates[2] = true;
-        this->_primes.push_back(2);
+        primes.push_back(2);
 
         for (size_t i = 2 * 2; i <= this->_rangeEnd; i += 2) {
             this->_candidates[i] = false;
@@ -53,8 +54,8 @@ public:
             fc.stop();
         }
         else {
-            this->_primes.push_back(nextPrime);
-            nextIndex = this->_primes.size() - 1;
+            primes.push_back(nextPrime);
+            nextIndex = primes.size() - 1;
         }
 
         return nextIndex;
@@ -62,7 +63,6 @@ public:
 
 private:
     mutable vector<bool> _candidates;
-    concurrent_vector<size_t>& _primes;
     const size_t _rangeStart, _rangeEnd;
     mutable size_t _i;
 };
@@ -73,17 +73,16 @@ struct PerfectPower {
 
 class PerfectPowerFunctor {
 public:
-    PerfectPowerFunctor(concurrent_vector<size_t>& primes,
-                        const size_t maxPower, const size_t rangeStart):
-        _primes(primes), _maxPower(maxPower), _rangeStart(rangeStart) {
+    PerfectPowerFunctor(const size_t maxPower, const size_t rangeStart):
+        _maxPower(maxPower), _rangeStart(rangeStart) {
     }
 
     vector<PerfectPower> operator()(const size_t index) const {
         vector<PerfectPower> perfectPowers;
 
-        size_t sum = this->_primes[index];
-        for (size_t j = index - 1; this->_primes[j] >= this->_rangeStart; --j) {
-            sum += this->_primes[j];
+        size_t sum = primes[index];
+        for (size_t j = index - 1; primes[j] >= this->_rangeStart; --j) {
+            sum += primes[j];
 
             for (size_t base = 2, product = base * base;
                  product <= sum;
@@ -95,8 +94,8 @@ public:
 
                     if (product == sum) {
                         PerfectPower perfectPower;
-                        perfectPower.start = this->_primes[j];
-                        perfectPower.end = this->_primes[index];
+                        perfectPower.start = primes[j];
+                        perfectPower.end = primes[index];
                         perfectPower.sum = sum;
                         perfectPower.base = base;
                         perfectPower.power = power;
@@ -111,7 +110,6 @@ public:
         return perfectPowers;
     }
 private:
-    concurrent_vector<size_t>& _primes;
     const size_t _maxPower;
     const size_t _rangeStart;
 };
@@ -154,16 +152,11 @@ int main(int argc, char** argv) {
     else
         ntoken = 10;
 
-    vector<bool> candidates(rangeEnd + 1, true);
-    candidates[0] = false;
-    candidates[1] = false; // 1 not considered prime
-    concurrent_vector<size_t> primes;
-
     filter_t<void, size_t> f1(filter::serial_in_order,
-                              PrimeFunctor(primes, rangeStart, rangeEnd));
+                              PrimeFunctor(rangeStart, rangeEnd));
 
     filter_t<size_t, vector<PerfectPower> > f2(filter::parallel,
-                                               PerfectPowerFunctor(primes, maxPower, rangeStart));
+                                               PerfectPowerFunctor(maxPower, rangeStart));
 
     filter_t<vector<PerfectPower>, void> f3(filter::serial_in_order,
                                             OutputFunctor(out));
