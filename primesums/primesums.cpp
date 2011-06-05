@@ -147,10 +147,18 @@ int main(int argc, char** argv) {
     istringstream(argv[3]) >> maxPower;    
     ofstream out(argv[4]);
 
+    // ntoken is the maximum number of "tokens" that can flow through the
+    // parallel pipeline concurrently.  Basically, it's the maximum degree of
+    // concurrency.  It would be nice to auto-tune this based on discovering the
+    // number of CPUs available at runtime.  (i.e. check /proc/cpuinfo)  For
+    // now, this defaults to 100.  Experimentally, that seems to be a good
+    // number for running on the Intel Manycore Testing Lab, where the judging
+    // happens.  You can pass an extra argument to override the default and test
+    // other values.
     if (argc > 5)
         istringstream(argv[5]) >> ntoken;
     else
-        ntoken = 10;
+        ntoken = 100;
 
     filter_t<void, size_t> f1(filter::serial_in_order,
                               PrimeFunctor(rangeStart, rangeEnd));
