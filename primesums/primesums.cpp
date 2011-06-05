@@ -2,6 +2,25 @@
 // Intel Threading Challenge 2011
 // Prime Sums
 
+// This solution uses Intel Threading Building Blocks to set up a parallel
+// pipeline consisting of 3 filters:
+// 
+// 1. PrimeFunctor runs in serial and uses an implementation of the sieve of
+// Eratosthenes to emit prime numbers.
+// 
+// 2. PerfectPowerFunctor runs in parallel and receives the primes discovered by
+// PrimeFunctor, checks the sums of each subset of primes in range up to that
+// prime against possible perfect powers, and emits a vector of structures
+// describing any perfect powers that it found.
+// 
+// 3. OutputFunctor runs in serial and writes results to the output file.
+// 
+// PrimeFunctor and PerfectPowerFunctor have some shared state in the form of a
+// concurrent_vector containing primes that have been discovered.  When
+// PerfectPowerFunctor receives a particular prime, it is guaranteed that the
+// shared concurrent_vector already contains all primes less than that prime.
+// PerfectPowerFunctor uses this concurrent_vector to calculate the sums.
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
