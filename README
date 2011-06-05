@@ -5,4 +5,9 @@ This repo holds my submissions for the Intel Threading Challenge 2011:
 
 http://software.intel.com/en-us/contests/intel-threading-challenge-2011/contests.php
 
+I'm using the contest as an opportunity to learn the Intel Threading Building
+Blocks library:
+
+http://threadingbuildingblocks.org/
+
 Code in here may be in various states of sloppiness/cleanliness as I experiment.
