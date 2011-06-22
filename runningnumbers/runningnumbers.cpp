@@ -28,6 +28,26 @@ union buffercell {
 struct buffer {
     size_t size;
     buffercell* cells;
+
+    bool isZero() const {
+        bool result = true;
+
+        for (size_t i = 0; i < this->size && result; ++i)
+            result = (this->cells[i].bufferdword == 0x00000000);
+
+        return result;
+    }
+
+    bool operator!=(const buffer& other) const {
+        bool result = (this->size == other.size);
+
+        if (result) {
+            for (size_t i = 0; i < this->size && result; ++i)
+                result = this->cells[i].bufferdword == other.cells[i].bufferdword;
+        }
+
+        return !result;
+    }
 };
 
 buffer parseBuffer(const char* const in) {
@@ -60,33 +80,38 @@ int main(int argc, char** argv) {
     }
 
     buffer source(parseBuffer(argv[1]));
+    buffer cycling(parseBuffer(argv[1]));
     buffer byteInc(parseBuffer(argv[2]));
     buffer dwordInc(parseBuffer(argv[3]));
 
-    for (size_t i = 0; i < 5000; ++i) {
+    size_t i =0;
+    for (; i == 0 || (source != cycling && !cycling.isZero()); ++i) {
         if (!(i % 37)) {
-            for (size_t j = 0; j < source.size; ++j) {
-                source.cells[j].bufferdword += dwordInc.cells[j].bufferdword;
+            for (size_t j = 0; j < cycling.size; ++j) {
+                cycling.cells[j].bufferdword += dwordInc.cells[j].bufferdword;
             }
         }
         else {
-            for (size_t j = 0; j < source.size; ++j) {
+            for (size_t j = 0; j < cycling.size; ++j) {
                 for (size_t k = 0; k < 4; ++k) {
-                    source.cells[j].bufferbytes[k] += byteInc.cells[j].bufferbytes[k];
+                    cycling.cells[j].bufferbytes[k] += byteInc.cells[j].bufferbytes[k];
                 }
             }
         }
 
+        /*
         cout << "Cycle " << dec << setw(4) << setfill('0') << i + 1 << ": ";
 
-        for (size_t j = 0; j < source.size; ++j) {
+        for (size_t j = 0; j < cycling.size; ++j) {
             if (j > 0) cout << " ";
-            cout << hex << setw(8) << setfill('0') << uppercase << source.cells[j].bufferdword;
+            cout << hex << setw(8) << setfill('0') << uppercase << cycling.cells[j].bufferdword;
         }
 
         cout << endl;
+        */
     }
 
+    cout << i << endl;
     cout << (tick_count::now() - begin).seconds() << endl;
     return 0;
 }
