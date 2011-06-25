@@ -29,6 +29,17 @@ struct buffer {
     size_t size;
     buffercell* cells;
 
+    buffer& operator=(const buffer& other) {
+        delete[] this->cells;
+        this->size = other.size;
+        this->cells = new buffercell[this->size];
+
+        for (size_t i = 0; i < this->size; ++i)
+            this->cells[i].bufferdword = other.cells[i].bufferdword;
+
+        return *this;
+    }
+
     bool isZero() const {
         bool result = true;
 
@@ -80,38 +91,38 @@ int main(int argc, char** argv) {
     }
 
     buffer source(parseBuffer(argv[1]));
-    buffer cycling(parseBuffer(argv[1]));
     buffer byteInc(parseBuffer(argv[2]));
     buffer dwordInc(parseBuffer(argv[3]));
 
-    size_t i =0;
+    size_t i = 0;
+    buffer cycling;
+    cycling.size = 0;
+    cycling.cells = NULL;
     for (; i == 0 || (source != cycling && !cycling.isZero()); ++i) {
-        if (!(i % 37)) {
-            for (size_t j = 0; j < cycling.size; ++j) {
-                cycling.cells[j].bufferdword += dwordInc.cells[j].bufferdword;
+        cycling = source;
+
+        for (size_t j = 0; j <= i; j += 37) {
+            for (size_t k = 0; k < cycling.size; ++k) {
+                cycling.cells[k].bufferdword += dwordInc.cells[k].bufferdword;
+            }
+
+            size_t cycleOffset = i - j;
+            size_t byteIncrements = (cycleOffset >= 36 ? 36 : cycleOffset);
+
+            for (size_t k = 0; k < cycling.size; ++k) {
+                cycling.cells[k].bufferbytes[0] +=
+                    (byteInc.cells[k].bufferbytes[0] * byteIncrements);
+                cycling.cells[k].bufferbytes[1] +=
+                    (byteInc.cells[k].bufferbytes[1] * byteIncrements);
+                cycling.cells[k].bufferbytes[2] +=
+                    (byteInc.cells[k].bufferbytes[2] * byteIncrements);
+                cycling.cells[k].bufferbytes[3] +=
+                    (byteInc.cells[k].bufferbytes[3] * byteIncrements);
             }
         }
-        else {
-            for (size_t j = 0; j < cycling.size; ++j) {
-                for (size_t k = 0; k < 4; ++k) {
-                    cycling.cells[j].bufferbytes[k] += byteInc.cells[j].bufferbytes[k];
-                }
-            }
-        }
-
-        /*
-        cout << "Cycle " << dec << setw(4) << setfill('0') << i + 1 << ": ";
-
-        for (size_t j = 0; j < cycling.size; ++j) {
-            if (j > 0) cout << " ";
-            cout << hex << setw(8) << setfill('0') << uppercase << cycling.cells[j].bufferdword;
-        }
-
-        cout << endl;
-        */
     }
 
-    cout << i << endl;
+    cout << dec << i << endl;
     cout << (tick_count::now() - begin).seconds() << endl;
     return 0;
 }
